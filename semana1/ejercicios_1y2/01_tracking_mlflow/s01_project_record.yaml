@@ -1,0 +1,81 @@
+project:
+  name: "clasificacion_wine_quality_didactica"
+  team_alias: "id02"
+  decision_supported: "seleccionar con validación y comprobar una vez en test"
+  users_affected: "equipo docente; ninguna decisión comercial"
+
+data:
+  source: "data/raw/WineQT.csv (caso didáctico del repositorio)"
+  contains_personal_data: false
+  limitations:
+    - "El target es quality multiclase (3–8); para XGBoost se codifica de forma reversible como quality_class = quality - 3."
+    - "No representa una población vinícola completa ni autoriza decisiones comerciales."
+
+evidence:
+  mlflow_experiment: "/Shared/semana01-tracking"
+  batch_id: "s01-60c8e4cf"
+  candidate_runs: 7
+  selection_gate:
+    minimum_validation_f1_macro: 0.28
+    ranking:
+      - "validation.f1_macro DESC"
+      - "validation.accuracy DESC"
+      - "validation.latency_ms_per_row ASC"
+    test_used_for_selection: false
+  winner:
+    run_id: "c1a40eeb68db44f8bc4bbac39b573615"
+    validation_f1_macro: 0.47157386219171116
+    validation_recall_macro: 0.4738469059121233
+    test_f1_macro: 0.2946036718738975
+    test_recall_macro: 0.2968908862297784
+
+registry:
+  registered_model: "workspace.default.wine_quality_classifier_id02"
+  rollback_version: 5
+  champion_version: 6
+  challenger_smoke_test_passed: true
+  rollback_verified: true
+  alias: "Champion"
+  signature_present: true
+
+deployment:
+  mode: "local_notebook_http"
+  source_artifact: "deployment/model.joblib"
+  public_endpoint: false
+  persistent: false
+  deployment_run_id: "a26d3a6cec25403b808f2823b0906230"
+  contract_tests:
+    health_status: 200
+    valid_prediction_status: 200
+    invalid_request_status: 400
+    non_object_json_status: 400
+  api_stopped: true
+
+risks:
+  - id: R1
+    risk: "Uso de una predicción de quality como garantía de calidad comercial"
+    impact: high
+    likelihood: medium
+    owner: "equipo de producto"
+    mitigation: "Aviso explícito, validación de laboratorio y prohibición de uso comercial."
+
+  - id: R2
+    risk: "Un secreto aparece en un parámetro, tag, artefacto o traza"
+    impact: high
+    likelihood: low
+    owner: "responsable técnico"
+    mitigation: "Usar identidad del entorno o Secrets; revisar logs antes de compartir."
+
+  - id: R3
+    risk: "Training y serving aplican transformaciones diferentes"
+    impact: high
+    likelihood: medium
+    owner: "ml_engineer"
+    mitigation: "Empaquetar preprocessing y modelo en el mismo Pipeline y probar el contrato."
+
+  - id: R4
+    risk: "Una respuesta de agente no está respaldada por el contexto"
+    impact: medium
+    likelihood: medium
+    owner: "responsable de IA"
+    mitigation: "Trazas, conjunto de evaluación y revisión humana."
