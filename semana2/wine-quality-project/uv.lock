@@ -7,12 +7,6 @@ resolution-markers = [
     "sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 
-[manifest]
-members = [
-    "semana2",
-    "wine-quality",
-]
-
 [[package]]
 name = "cloudpickle"
 version = "3.1.2"
@@ -328,11 +322,6 @@ wheels = [
 ]
 
 [[package]]
-name = "semana2"
-version = "0.1.0"
-source = { editable = "." }
-
-[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -362,7 +351,7 @@ wheels = [
 [[package]]
 name = "wine-quality"
 version = "0.1.0"
-source = { editable = "semana2/wine-quality-project" }
+source = { editable = "." }
 dependencies = [
     { name = "pandas" },
     { name = "scikit-learn" },
