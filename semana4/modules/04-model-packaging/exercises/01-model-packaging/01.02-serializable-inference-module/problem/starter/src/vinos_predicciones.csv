@@ -1,0 +1,4 @@
+sample_id,predicted_class,confidence,model_version,preprocessing_version
+red-001,acceptable,1.0,wine-quality-demo-v1,wine-red-features-v1
+red-002,acceptable,1.0,wine-quality-demo-v1,wine-red-features-v1
+red-003,acceptable,1.0,wine-quality-demo-v1,wine-red-features-v1

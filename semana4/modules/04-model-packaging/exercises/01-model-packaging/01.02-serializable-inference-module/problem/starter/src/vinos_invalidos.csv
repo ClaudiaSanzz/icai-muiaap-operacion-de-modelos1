@@ -1,0 +1,4 @@
+sample_id,fixed_acidity,volatile_acidity,citric_acid,residual_sugar,chlorides,free_sulfur_dioxide,total_sulfur_dioxide,density,ph,sulphates,alcohol
+red-001,7.4,0.7,0.0,1.9,0.076,11,34,0.9978,3.51,0.56,9.4
+red-002,7.8,0.88,0.0,2.6,0.098,25,67,0.9968,99.0,0.68,9.8
+red-003,8.1,0.28,0.4,2.0,0.05,15,30,0.995,3.3,0.8,12.5
