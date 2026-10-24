@@ -61,13 +61,24 @@ class ArtifactManifest(BaseModel):
 
     @model_validator(mode="after")
     def validate_contract(self):  # self representa a manifest
-        if (
-            self.feature_names != FEATURE_NAMES
-        ):  # self.feature_names son las features guardadas en manifest
-            raise ValueError("El orden o los nombres de las features no coinciden")
+         # comprobar que la version del esquema es compatible
+        if self.schema_version != ARTIFACT_SCHEMA_VERSION:
+            raise ValueError("Version del esquema incompatible")
 
+        # comprobar que la version del preprocesado coincide
+        if self.preprocessing_version != PREPROCESSING_VERSION:
+            raise ValueError("Version del preprocesado incompatible")
+
+        # comprobar nombres y orden de las caracteristicas
+        if self.feature_names != FEATURE_NAMES:
+            raise ValueError("Las caracteristicas no coinciden")
+
+        # comprobar que las etiquetas son las esperadas
         if self.output_labels != OUTPUT_LABELS:
-            raise ValueError("Las etiquetas de salida no coinciden")
+            raise ValueError("Las etiquetas no coinciden")
+
+        if not self.model_version.strip():
+            raise ValueError("La version del modelo no puede estar vacia")
 
         return self
 

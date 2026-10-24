@@ -38,7 +38,7 @@ def predict_file(
         resultados.append(
             {
                 "sample_id": sample_id,
-                "predicted_class": prediction.quality_band,
+                "quality_band": prediction.quality_band,
                 "confidence": prediction.confidence,
                 "model_version": prediction.model_version,
                 "preprocessing_version": prediction.preprocessing_version,
@@ -54,7 +54,7 @@ def predict_file(
             file,
             fieldnames=[
                 "sample_id",
-                "predicted_class",
+                "quality_band",
                 "confidence",
                 "model_version",
                 "preprocessing_version",
