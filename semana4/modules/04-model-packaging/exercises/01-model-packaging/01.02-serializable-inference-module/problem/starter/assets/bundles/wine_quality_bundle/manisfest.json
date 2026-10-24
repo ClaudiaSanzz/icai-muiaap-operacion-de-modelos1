@@ -1,0 +1,13 @@
+
+
+[
+    {
+        "schema_version": "1.0.0",
+        "model_version": "wine-quality-rf-v1",
+        "preprocessing_version": "1.0.0",
+        "feature_name": ["fixed_acidity", "volatile_acidity", "citric_acid", "residual_sugar", "chlorides", "free_sulfur_dioxide", "total_sulfur_dioxide", "density", "ph", "sulphates", "alcohol"],
+        "output_labels": ["needs review","aceptable","excellent"] ,
+        "estimator_type": "RandomForest",
+        
+    }
+]
