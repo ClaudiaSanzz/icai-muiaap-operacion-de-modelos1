@@ -76,13 +76,72 @@ def collect_values(st: Any) -> tuple[bool, dict[str, float]]:
 def get_cached_gateway(st: Any, bundle_value: str | None) -> InferenceGateway:
     """TODO: usa `st.cache_resource` sobre el gateway, no sobre la respuesta."""
 
-    raise NotImplementedError("TODO: cachea el gateway heredado de S5")
+    # queremos que el gateway se cree un avez y se reutilice mientras siga en cache
+    @st.cache_resource
+    def cargar_gateway(ruta_bundle: str | None) -> InferenceGateway:
+        return build_gateway(ruta_bundle)
+
+    return cargar_gateway(bundle_value)
 
 
 def render_state(st: Any, state: UiState, target: Any | None = None) -> None:
     """TODO: presenta idle/loading/success/error en un target de Streamlit."""
+    # Si nos pasan una zona de pantalla, la utilizamos.
+    # Si no, mostramos los resultados directamente en Streamlit.
+    pantalla = target if target is not None else st
 
-    raise NotImplementedError("TODO: renderiza el estado sin mostrar excepciones")
+    # todavía no hemos hecho ninguna predicción
+    if state.phase == "idle":
+        pantalla.info("Introduce los datos del vino y pulsa Ejecutar inferencia.")
+        return
+
+    # Estamos realizando la predicción
+    if state.phase == "loading":
+        pantalla.info("Estamos procesando los datos...")
+        return
+
+    # La predicción ha terminado correctamente
+    if state.phase == "success" and state.view is not None:
+        # Recuperamos los resultados que preparamos en presentation.py
+        view = state.view
+
+        pantalla.success(view.quality_label)
+
+        # Mostramos las tres métricas principales
+        col1, col2, col3 = pantalla.columns(3)
+
+        col1.metric("Categoría", view.quality_label)
+        col2.metric("Confianza", f"{view.confidence:.0%}")
+        col3.metric("Latencia", f"{view.latency_ms:.0f} ms")
+
+        # Mensaje para interpretar la confianza
+        if view.confidence_level == "low":
+            pantalla.warning(view.confidence_message)
+        else:
+            pantalla.info(view.confidence_message)
+
+        # Avisamos si la predicción ha tardado más de lo esperado
+        if view.latency_status == "above_target":
+            pantalla.warning(view.latency_message)
+        else:
+            pantalla.caption(view.latency_message)
+
+        # Dejamos los detalles técnicos en un desplegable
+        with pantalla.expander("Trazabilidad"):
+            st.write(f"Modelo: {view.model_version}")
+            st.write(f"Preprocesado: {view.preprocessing_version}")
+            st.write(f"Request ID: {state.request_id}")
+
+        return
+
+        # Ha ocurrido un error
+    if state.phase == "error" and state.error is not None:
+        error = state.error
+
+        pantalla.error(error.title)
+        pantalla.write(error.message)
+        pantalla.info(error.recovery)
+        pantalla.caption(f"Request ID: {error.request_id}")
 
 
 def main() -> None:
