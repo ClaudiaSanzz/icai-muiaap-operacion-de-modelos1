@@ -1,0 +1,1 @@
+No se debe reintentar un POST automáticamente porque puede que el servidor ya haya procesado la petición, aunque no hayamos recibido la respuesta. Si la repetimos, podríamos ejecutar la misma operación dos veces.
