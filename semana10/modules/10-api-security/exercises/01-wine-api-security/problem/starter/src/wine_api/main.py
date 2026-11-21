@@ -20,7 +20,7 @@ from wine_api.settings import Settings
 # Después regenera el contrato (S10.6c):
 #   uv run python -m wine_api.export_openapi && git diff contracts/openapi.json
 # Comprobación: tests/test_s10_6_openapi.py
-API_VERSION = "1.1.0"
+API_VERSION = "2.0.0"
 
 API_DESCRIPTION = """
 Servicio de inferencia del proyecto **Wine Quality** de Operación de Modelos.
@@ -30,10 +30,19 @@ Servicio de inferencia del proyecto **Wine Quality** de Operación de Modelos.
   `error.code`, no contra `error.message`.
 - La predicción es determinista y docente: no es una garantía de calidad.
 """
+"""
+- para realizar predicciones se necesita la cabecera: 'X-API-key'
+- los clientes tienen permisos ('scopes'): 'predict' o 'admin'
+- si se supera el limite de peticiones, la API devuelve un error '429' 
+con la cabecera 'Retry-After'
+"""
+
 
 OPENAPI_TAGS = [
     {"name": "health", "description": "Disponibilidad del servicio y del modelo."},
     {"name": "predictions", "description": "Inferencia de calidad de vino tinto."},
+    {"name": "admin", "description": "Consulta del uso de la API"},
+
 ]
 
 
@@ -62,6 +71,11 @@ def create_app(
         description=API_DESCRIPTION,
         openapi_tags=OPENAPI_TAGS,
         lifespan=lifespan,
+        #si se desactiva la documentacion, estas rutas no existen 
+        docs_url="/docs" if settings.docs_enabled else None,
+        redoc_url="/redoc" if settings.docs_enabled else None, 
+        openapi_url ="/openapi.json" if settings.docs_enabled else None,
+
     )
     app.state.settings = settings
     app.state.rate_limiter = rate_limiter or FixedWindowRateLimiter()
@@ -75,6 +89,25 @@ def create_app(
     # no debe pasar por la autenticación? Pista: el último middleware que se
     # añade es el más externo.
     # Comprobación: uv run pytest -q tests/test_s10_5_cors.py
+    
+    app.add_middleware(
+        CORSMiddleware,
+        #indica que paginas pueden acceder desde el navegador 
+        allow_origins=settings.cors_origins, 
+        #permite peticiones get y post
+        allow_methods=["GET", "POST"],
+        #permite enviar el tipo de contenido y la API key
+        allow_headers=["Content-Type", "X-API-Key"],
+        #no habilitamos credenciales del navegador
+        allow_credentials=False,
+        #permite que JavaScript lea esas cabeceras de respuesta
+        expose_headers=[
+            "X-Request-Id",
+            "Retry-After",
+            "X-RateLimit-Remaining",
+        ],
+    )
+
     install_error_handlers(app)
     app.include_router(health.router)
     app.include_router(predictions.router)

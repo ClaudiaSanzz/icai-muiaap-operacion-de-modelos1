@@ -57,6 +57,8 @@ def get_client(api_key: Annotated[str | None, Security(api_key_header)]) -> Clie
     # compare_digest tarda lo mismo acierte o falle: no filtra la clave por tiempo.
     # Con `str` solo admite ASCII; la solución del workshop compara bytes.
     for client in CLIENTS:
+        if api_key and secrets.compare_digest(api_key, client.key): 
+
         if api_key and secrets.compare_digest(api_key, client.key):
             return client
     raise HTTPException(

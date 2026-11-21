@@ -140,6 +140,9 @@ class UsageResponse(BaseModel):
     clients: list[ClientUsage]
     request_id: str = Field(description="Identificador para correlacionar logs.")
 
+#usamos StrEnum porque permite definir un conjunto de codigos de error como cadenas de 
+#texto fijas. asi el frontend puede identificar cada error por su codigo sin depender 
+#del mensaje 
 
 class ErrorCode(StrEnum):
     """Códigos estables: el cliente programa contra ellos, no contra el texto."""
@@ -153,6 +156,10 @@ class ErrorCode(StrEnum):
     # `unauthorized`, `forbidden` y `rate_limited`. Un cliente programa contra
     # `error.code`: ¿qué haría el front con cada uno (pedir clave, avisar de
     # permisos, esperar `Retry-After`)?
+    UNAUTHORIZED = "unauthorized" #401 el cliente no ha enviado una API key valida
+    FORBIDDEN = "forbidden" #403 el cliente esta indentificado, pero no teiene permisos
+    RATE_LIMITED = "rate_limited" #429 el cliente ha superado su limite de peticiones
+
     MODEL_UNAVAILABLE = "model_unavailable"
     INTERNAL_ERROR = "internal_error"
 
