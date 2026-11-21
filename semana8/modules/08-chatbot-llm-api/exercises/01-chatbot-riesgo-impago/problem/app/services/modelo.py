@@ -1,7 +1,7 @@
 import joblib
 
 from app.config import MODEL_PATH
-from app.schemas.prestamo import PrediccionSalida
+from app.schemas.prestamo import PrediccionSalida, PrestamoEntrada
 
 #2. AQUI CARGAMOS EL MODELO Y PREDECIMOS 
 
