@@ -14,8 +14,8 @@ from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, Request, Response  # noqa: F401 - pista para S10.4c
-from wine_api.errors import RateLimitExceededError
 
+from wine_api.errors import RateLimitExceededError
 from wine_api.security import ClientDep
 
 logger = logging.getLogger("wine_api.rate_limit")
@@ -61,21 +61,21 @@ class FixedWindowRateLimiter:
         # Usa `self.clock()`, nunca `time.time()`: así los tests controlan el
         # reloj. Mira `usage()` para ver cómo se lee `_windows`.
         # Comprobación: los tres primeros tests de tests/test_s10_4_rate_limit.py
-                
-        #protegemos el contador para evitar accesos a simultaneos 
+
+        # protegemos el contador para evitar accesos a simultaneos
         with self._lock:
-            ahora=self.clock()
+            ahora = self.clock()
 
-            #recuperamos el inicio de la ventana y el contador
-            inicio, contador = self._windows.get(key,(ahora,0))
+            # recuperamos el inicio de la ventana y el contador
+            inicio, contador = self._windows.get(key, (ahora, 0))
 
-            #si ha pasado un minuto, reiniciamos el contador
-            if ahora - inicio >= self.window_seconds: 
+            # si ha pasado un minuto, reiniciamos el contador
+            if ahora - inicio >= self.window_seconds:
                 inicio = ahora
                 contador = 0
 
-            #si ha alcanzado el limite, rechazamos la peticion 
-            if contador >= limit: 
+            # si ha alcanzado el limite, rechazamos la peticion
+            if contador >= limit:
                 espera = math.ceil(self.window_seconds - (ahora - inicio))
                 return RateLimitDecision(
                     allowed=False,
@@ -83,16 +83,15 @@ class FixedWindowRateLimiter:
                     retry_after=espera,
                 )
 
-            #si todavia puede hacer peticiones sumamos una
-            contador +=1
-            self._windows[key]=(inicio, contador)
+            # si todavia puede hacer peticiones sumamos una
+            contador += 1
+            self._windows[key] = (inicio, contador)
 
             return RateLimitDecision(
                 allowed=True,
-                remaining=limit-contador,
+                remaining=limit - contador,
                 retry_after=0,
             )
-
 
     def usage(self, key: str) -> int:
         """Peticiones contadas para `key` en la ventana actual."""
@@ -129,8 +128,8 @@ def enforce_rate_limit(
     #   `response: Response`.
     # ¿Por qué esta dependencia va DESPUÉS de autenticar y autorizar?
     # Comprobación: uv run pytest -q tests/test_s10_4_rate_limit.py
-    
-      # Contamos la petición
+
+    # Contamos la petición
     decision = limiter.hit(client.name, client.rate_limit_per_minute)
 
     # Si supera el límite, devolvemos un error 429

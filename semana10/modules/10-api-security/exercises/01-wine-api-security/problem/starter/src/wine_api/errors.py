@@ -36,11 +36,12 @@ class WineApiError(Exception):
     # `ModelUnavailableError()` debe seguir funcionando sin argumentos.
     # Comprobación: tests/test_s10_2_authentication.py (WWW-Authenticate).
 
-    #init se ejecuta al crear un error
-    #headers permite pasar cabeceras HTTP
-    #headers or {}: si no pasamos ningunam guardamos un diccionario vacio
-    def __init__(self, headers: dict[str, str] | None = None): 
+    # init se ejecuta al crear un error
+    # headers permite pasar cabeceras HTTP
+    # headers or {}: si no pasamos ningunam guardamos un diccionario vacio
+    def __init__(self, headers: dict[str, str] | None = None):
         self.headers = headers or {}
+
 
 class ModelUnavailableError(WineApiError):
     status_code = 503
@@ -59,53 +60,32 @@ class ModelUnavailableError(WineApiError):
 # y, si quieres, `X-RateLimit-Limit` y `X-RateLimit-Remaining: 0`.
 
 
-#con wineapierror heredamos el comportamiento del error que acabamos de modificar
+# con wineapierror heredamos el comportamiento del error que acabamos de modificar
 class AuthenticationError(WineApiError):
-    status_code = 401 #indica que no hemos podido autenticar el cliente
-    code = ErrorCode.UNAUTHORIZED #idetifica el error como unaythorized
-    message = "Invalid or missing API key" #utilizamos el mismo mensaje si falta la
-    #clave o es incorrecta
+    status_code = 401  # indica que no hemos podido autenticar el cliente
+    code = ErrorCode.UNAUTHORIZED  # idetifica el error como unaythorized
+    message = "Invalid or missing API key"
+    # utilizamos el mismo mensaje si falta la
+    # clave o es incorrecta
 
-    #tenemos que crear un error que aparezca cuando alguien intenta acceder 
-    #a nuestra API sin una clave valida. este error debe devolver un 401
+    # tenemos que crear un error que aparezca cuando alguien intenta acceder
+    # a nuestra API sin una clave valida. este error debe devolver un 401
     def __init__(self):
-        #llama al constructor de wineapierror y le pasa la cabecera HTTP
+        # llama al constructor de wineapierror y le pasa la cabecera HTTP
         super().__init__(headers={"WWW-Authenticate": "ApiKey"})
 
-#esta clase represetna el error que devolveremos cuando un cliente no tenga los
-#permisos necesarios
+
+# esta clase represetna el error que devolveremos cuando un cliente no tenga los
+# permisos necesarios
 class PermissionDeniedError(WineApiError):
-    status_code=403
+    status_code = 403
     code = ErrorCode.FORBIDDEN
     message = "Permission denied"
 
-#Por que usamos el mismo mensaje?
-#porque si distinguimos entre una clave ausente y una incorrecta, podriamos dar
-#informacion innecesaria a un atacante sobre como funciona la autenticacion
 
-#con wineapierror heredamos el comportamiento del error que acabamos de modificar
-class AuthenticationError(WineApiError):
-    status_code = 401 #indica que no hemos podido autenticar el cliente
-    code = ErrorCode.UNAUTHORIZED #idetifica el error como unaythorized
-    message = "Invalid or missing API key" #utilizamos el mismo mensaje si falta la
-    #clave o es incorrecta
-
-    #tenemos que crear un error que aparezca cuando alguien intenta acceder 
-    #a nuestra API sin una clave valida. este error debe devolver un 401
-    def __init__(self):
-        #llama al constructor de wineapierror y le pasa la cabecera HTTP
-        super().__init__(headers={"WWW-Authenticate": "ApiKey"})
-
-#esta clase represetna el error que devolveremos cuando un cliente no tenga los
-#permisos necesarios
-class PermissionDeniedError(WineApiError):
-    status_code=403
-    code = ErrorCode.FORBIDDEN
-    message = "Permission denied"
-
-#Por que usamos el mismo mensaje?
-#porque si distinguimos entre una clave ausente y una incorrecta, podriamos dar
-#informacion innecesaria a un atacante sobre como funciona la autenticacion
+# Por que usamos el mismo mensaje?
+# porque si distinguimos entre una clave ausente y una incorrecta, podriamos dar
+# informacion innecesaria a un atacante sobre como funciona la autenticacion
 
 # TODO S10.3a: crea `PermissionDeniedError` (403, `ErrorCode.FORBIDDEN`).
 #
@@ -113,16 +93,16 @@ class PermissionDeniedError(WineApiError):
 # Recibe los segundos de espera y produce `Retry-After` (entero, en segundos)
 # y, si quieres, `X-RateLimit-Limit` y `X-RateLimit-Remaining: 0`.
 
-class RateLimitExceededError(WineApiError):
-    status_code=429
-    code=ErrorCode.RATE_LIMITED
-    message="Rate limit exceeded"
 
-    def __init__(self,retry_after:int):
-        #indicamos cuantos segundos debe esperar el siguiente cliente
-        super().__init__(
-            headers={"retry-after": str(retry_after)}
-        )
+class RateLimitExceededError(WineApiError):
+    status_code = 429
+    code = ErrorCode.RATE_LIMITED
+    message = "Rate limit exceeded"
+
+    def __init__(self, retry_after: int):
+        # indicamos cuantos segundos debe esperar el siguiente cliente
+        super().__init__(headers={"retry-after": str(retry_after)})
+
 
 def error_response(
     request: Request,
@@ -130,9 +110,8 @@ def error_response(
     code: ErrorCode,
     message: str,
     fields: list[FieldError] | None = None,
-    #esto permite que la funcion reciba cabeceras adicionales
-    headers: dict[str, str] | None = None, 
-
+    # esto permite que la funcion reciba cabeceras adicionales
+    headers: dict[str, str] | None = None,
 ) -> JSONResponse:
     """Construye el sobre de error; `fields` desaparece si no aplica."""
 
@@ -147,7 +126,6 @@ def error_response(
         # el ** introduce las cabeceras adicionales dentro del diccionario y
         # conserva tambien el identificador de la peticion
         headers={**(headers or {}), REQUEST_ID_HEADER: request_id},
-
     )
 
 
@@ -180,7 +158,9 @@ async def handle_validation_error(
 
 
 async def handle_api_error(request: Request, exc: WineApiError) -> JSONResponse:
-    return error_response(request, exc.status_code, exc.code, exc.message, headers=exc.headers)
+    return error_response(
+        request, exc.status_code, exc.code, exc.message, headers=exc.headers
+    )
 
 
 async def handle_http_exception(

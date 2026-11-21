@@ -47,7 +47,9 @@ class AuthenticatedClient:
 
 
 def authenticate_client(
-    settings: SettingsDep, request_id: RequestIdDep, api_key:Annotated[str|None, Security(api_key_header)],
+    settings: SettingsDep,
+    request_id: RequestIdDep,
+    api_key: Annotated[str | None, Security(api_key_header)],
 ) -> AuthenticatedClient:
     """Identifica al cliente por su API key o lanza `AuthenticationError`."""
 
@@ -62,25 +64,23 @@ def authenticate_client(
     # - si falta o no coincide, registra el intento con `logger.warning` (con
     #   el `request_id`, NUNCA con la clave) y lanza `AuthenticationError`.
     # Comprobación: uv run pytest -q tests/test_s10_2_authentication.py
-        
-    #recorremos los clientes configurados
-    for name, client in settings.clients.items():
 
-        #comparamos la clave recibida con la guardada
+    # recorremos los clientes configurados
+    for name, client in settings.clients.items():
+        # comparamos la clave recibida con la guardada
         if api_key is not None and secrets.compare_digest(
             api_key.encode(),
-            #recupera la clave que estaba protegida por SecretStr
-            client.key.get_secret_value().encode() 
+            # recupera la clave que estaba protegida por SecretStr
+            client.key.get_secret_value().encode(),
         ):
             return AuthenticatedClient(
-                name=name, 
+                name=name,
                 scopes=frozenset(client.scopes),
                 rate_limit_per_minute=client.rate_limit_per_minute,
             )
-    #si no encontramos ninguna clase valida
+    # si no encontramos ninguna clase valida
     logger.warning("Intento de autenticacion fallido: %s", request_id)
-    raise AuthenticationError() #devuelve un error 401 si la clave no es valida
-
+    raise AuthenticationError()  # devuelve un error 401 si la clave no es valida
 
 
 ClientDep = Annotated[AuthenticatedClient, Security(authenticate_client)]
@@ -95,7 +95,7 @@ def require_scope(scope: Scope) -> Callable[..., AuthenticatedClient]:
     # dependencia que luego se usa en `dependencies=[Depends(...)]`.
     # ¿Por qué falta de scope es 403 y no 401?
     # Comprobación: uv run pytest -q tests/test_s10_3_authorization.py
-        
+
     # Comprobamos si el cliente tiene el permiso necesario
     def comprobar_permiso(client: ClientDep) -> AuthenticatedClient:
         if scope not in client.scopes:
@@ -106,6 +106,7 @@ def require_scope(scope: Scope) -> Callable[..., AuthenticatedClient]:
     # Devolvemos la función que comprobará los permisos
     return comprobar_permiso
 
-#porque es 403 y no 401?
-#proque el cliente ya esta identificado mediante su API key (autenticacion),
-#pero no tiene permiso para realizar esa operacion (autorizacion)
+
+# porque es 403 y no 401?
+# proque el cliente ya esta identificado mediante su API key (autenticacion),
+# pero no tiene permiso para realizar esa operacion (autorizacion)

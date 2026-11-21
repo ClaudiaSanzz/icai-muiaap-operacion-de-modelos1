@@ -33,18 +33,15 @@ INVALID_FEATURES = {**VALID_FEATURES, "ph": 7.0}
 
 
 class WineApiUser(HttpUser):
-    #cada usuario espera entre 0.5 y 2 segundos entre peticiones
+    # cada usuario espera entre 0.5 y 2 segundos entre peticiones
 
     wait_time = between(0.5, 2)
-    
+
     def on_start(self):
-        #leemos la clave desde una variable de entorno
-        api_key=os.getenv("LOCUST_API_KEY")
-        #añadimos la clave a todas las peticiones del usuario 
+        # leemos la clave desde una variable de entorno
+        api_key = os.getenv("LOCUST_API_KEY")
+        # añadimos la clave a todas las peticiones del usuario
         self.client.headers.update({"X-API-key": api_key})
-
-    
-
 
     # TODO S10.7a: añade `on_start` para que cada usuario simulado envíe la
     # cabecera `X-API-Key` en todas sus peticiones. La clave se lee de la
@@ -52,11 +49,11 @@ class WineApiUser(HttpUser):
     # Investiga `self.client.headers` en la documentación de Locust
     # («HttpSession»). Comprobación: sin este paso, todas las predicciones
     # fallan con 401.
-    #esta tarea tiene peso 8 porque se ejecuta mas frecuentemente
+    # esta tarea tiene peso 8 porque se ejecuta mas frecuentemente
 
     @task(8)
     def predict(self) -> None:
-        #enviamos un vino valido para obtener una prediccion
+        # enviamos un vino valido para obtener una prediccion
 
         self.client.post("/v1/predictions", json={"features": VALID_FEATURES})
 
@@ -66,23 +63,21 @@ class WineApiUser(HttpUser):
     # dale un `name=` distinto para que salga en otra fila del informe.
     @task(1)
     def predict_invalid(self) -> None:
-        #enviamos un vino con un ph fuera del rango permitido
+        # enviamos un vino con un ph fuera del rango permitido
         with self.client.post(
             "/v1/predictions",
             json={"features": INVALID_FEATURES},
             name="POST /v1/predictions (invalid)",
             catch_response=True,
-        ) as response: 
-            #el error 422 es correcto porque el vino es invalido 
-            if response.status_code == 422: 
+        ) as response:
+            # el error 422 es correcto porque el vino es invalido
+            if response.status_code == 422:
                 response.success()
-            #cualquier otra respuesta se considera un fallo 
-            else: 
-                response.failure(
-                    f"Esperabamos 422 y recibimos {response.status_code}"
-                )
-    #esta tarea comprueba que la API esta funcionando 
+            # cualquier otra respuesta se considera un fallo
+            else:
+                response.failure(f"Esperabamos 422 y recibimos {response.status_code}")
 
+    # esta tarea comprueba que la API esta funcionando
 
     @task(1)
     def health(self) -> None:

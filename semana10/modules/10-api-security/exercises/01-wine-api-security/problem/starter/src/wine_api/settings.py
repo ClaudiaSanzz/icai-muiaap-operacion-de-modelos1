@@ -17,7 +17,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Scope = Literal["predict", "admin"]
 
-#configuracion de cada cliente
+# configuracion de cada cliente
+
 
 class ClientConfig(BaseModel):
     """Credencial, permisos y cuota de un cliente de la API."""
@@ -30,21 +31,22 @@ class ClientConfig(BaseModel):
     # - `rate_limit_per_minute`: entero estrictamente positivo, 60 por defecto
     #   (`Field` con una restricción numérica).
     # Comprobación: tests/test_s10_1_settings.py (repr y configuración inválida).
-    key: SecretStr #oculta la API key cuando imprimmos el objeto. 
-    scopes: list[Scope] #permite unicamente los permisos "predict" y "admin"
+    key: SecretStr  # oculta la API key cuando imprimmos el objeto.
+    scopes: list[Scope]  # permite unicamente los permisos "predict" y "admin"
     rate_limit_per_minute: int = Field(default=60, gt=0)
 
 
-#configuracion general de la API
+# configuracion general de la API
+
 
 class Settings(BaseSettings):
     """Configuración validada al arrancar: si algo es inválido, no arranca."""
 
     model_config = SettingsConfigDict(
         env_prefix="WINE_API_", env_file=".env", extra="ignore"
-    )#la configuracion se lee de las varibales de entorno 
+    )  # la configuracion se lee de las varibales de entorno
 
-    #indica si el predictor esta disponible o no. Por defecto esta disponible
+    # indica si el predictor esta disponible o no. Por defecto esta disponible
 
     mode: Literal["ready", "unavailable"] = "ready"
 
@@ -60,39 +62,32 @@ class Settings(BaseSettings):
     # ¿Por qué un error de configuración debe impedir arrancar en lugar de
     # aparecer en la primera petición?
     # Comprobación: uv run pytest -q tests/test_s10_1_settings.py
-    
-    #guarda los clientes en un diccionario. 
-    clients: dict[str, ClientConfig] = Field(default_factory=dict)
-    cors_origins: list[str] = Field(
-        default_factory=lambda:["http://localhost:8501"]
-    )
-    docs_enabled: bool = True #inidica si la documentacion de la API 
-    #esta activada
 
-    @field_validator("cors_origins") #valida el campo cors_origins
-    @classmethod #indica que es un metodo de la clase
-    def validar_origenes(cls, origins:list[str])->list[str]:
-        if "*" in origins: #comprueba si hemos permitido cualquier origen 
-            raise ValueError("No se permite '*' en CORS")  
+    # guarda los clientes en un diccionario.
+    clients: dict[str, ClientConfig] = Field(default_factory=dict)
+    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:8501"])
+    docs_enabled: bool = True  # inidica si la documentacion de la API
+    # esta activada
+
+    @field_validator("cors_origins")  # valida el campo cors_origins
+    @classmethod  # indica que es un metodo de la clase
+    def validar_origenes(cls, origins: list[str]) -> list[str]:
+        if "*" in origins:  # comprueba si hemos permitido cualquier origen
+            raise ValueError("No se permite '*' en CORS")
         return origins
 
-    #¿que tipo de pydantic evita que aparezca una API key en un repr, 
-    #print o log? ¿como recuperamos su valor? 
-    #secretstr, que oculta el valor al imprimir el objeto. Para recuperarlo 
-    #utilizamos .get_secret_value()
+    # ¿que tipo de pydantic evita que aparezca una API key en un repr,
+    # print o log? ¿como recuperamos su valor?
+    # secretstr, que oculta el valor al imprimir el objeto. Para recuperarlo
+    # utilizamos .get_secret_value()
 
-    #¿Por qé un error de configuacion debe impedir arrancar la API en lugar
-    #de aparecer en la primera peticion?
-    #PORque asi detectamos el problema antes de que la API empiece a recibir 
-    #peticines y evitamos que funcione con una configuracion incorrecta o 
-    #insegura
+    # ¿Por qé un error de configuacion debe impedir arrancar la API en lugar
+    # de aparecer en la primera peticion?
+    # PORque asi detectamos el problema antes de que la API empiece a recibir
+    # peticines y evitamos que funcione con una configuracion incorrecta o
+    # insegura
 
-    #¿Que significa fail closed?
-    #significa que, si no hemos comfigurado ningun cliente, la API no autoriza 
-    #a nadie por defecto. es mas seguro denegar el acceso que permitirlo
-    #accidentalmente
-
-    
-
-
-    
+    # ¿Que significa fail closed?
+    # significa que, si no hemos comfigurado ningun cliente, la API no autoriza
+    # a nadie por defecto. es mas seguro denegar el acceso que permitirlo
+    # accidentalmente

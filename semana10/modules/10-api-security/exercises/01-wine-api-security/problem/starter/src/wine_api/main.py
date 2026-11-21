@@ -42,7 +42,6 @@ OPENAPI_TAGS = [
     {"name": "health", "description": "Disponibilidad del servicio y del modelo."},
     {"name": "predictions", "description": "Inferencia de calidad de vino tinto."},
     {"name": "admin", "description": "Consulta del uso de la API"},
-
 ]
 
 
@@ -71,11 +70,10 @@ def create_app(
         description=API_DESCRIPTION,
         openapi_tags=OPENAPI_TAGS,
         lifespan=lifespan,
-        #si se desactiva la documentacion, estas rutas no existen 
+        # si se desactiva la documentacion, estas rutas no existen
         docs_url="/docs" if settings.docs_enabled else None,
-        redoc_url="/redoc" if settings.docs_enabled else None, 
-        openapi_url ="/openapi.json" if settings.docs_enabled else None,
-
+        redoc_url="/redoc" if settings.docs_enabled else None,
+        openapi_url="/openapi.json" if settings.docs_enabled else None,
     )
     app.state.settings = settings
     app.state.rate_limiter = rate_limiter or FixedWindowRateLimiter()
@@ -89,18 +87,18 @@ def create_app(
     # no debe pasar por la autenticación? Pista: el último middleware que se
     # añade es el más externo.
     # Comprobación: uv run pytest -q tests/test_s10_5_cors.py
-    
+
     app.add_middleware(
         CORSMiddleware,
-        #indica que paginas pueden acceder desde el navegador 
-        allow_origins=settings.cors_origins, 
-        #permite peticiones get y post
+        # indica que paginas pueden acceder desde el navegador
+        allow_origins=settings.cors_origins,
+        # permite peticiones get y post
         allow_methods=["GET", "POST"],
-        #permite enviar el tipo de contenido y la API key
+        # permite enviar el tipo de contenido y la API key
         allow_headers=["Content-Type", "X-API-Key"],
-        #no habilitamos credenciales del navegador
+        # no habilitamos credenciales del navegador
         allow_credentials=False,
-        #permite que JavaScript lea esas cabeceras de respuesta
+        # permite que JavaScript lea esas cabeceras de respuesta
         expose_headers=[
             "X-Request-Id",
             "Retry-After",

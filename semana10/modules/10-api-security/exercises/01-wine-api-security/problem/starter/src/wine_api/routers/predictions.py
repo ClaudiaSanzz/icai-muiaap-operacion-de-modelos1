@@ -3,19 +3,16 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
 
-from wine_api.rate_limit import enforce_rate_limit
-from wine_api.security import authenticate_client, require_scope
-
 from wine_api.dependencies import PredictorDep, RequestIdDep
+from wine_api.rate_limit import enforce_rate_limit
 from wine_api.schemas import (
     VALID_FEATURES_EXAMPLE,
     ErrorResponse,
-    ClientUsage,
-    UsageResponse,
     Prediction,
     PredictionRequest,
     PredictionResponse,
 )
+from wine_api.security import require_scope
 
 PREDICTION_EXAMPLES = {
     "valid": {
@@ -47,26 +44,20 @@ PREDICTION_EXAMPLES = {
 router = APIRouter(
     prefix="/v1/predictions",
     tags=["predictions"],
-        dependencies=[
+    dependencies=[
         Depends(require_scope("predict")),
         Depends(enforce_rate_limit),
     ],
-
     responses={
         400: {"model": ErrorResponse, "description": "El cuerpo no es JSON válido."},
-        
         # Error cuando falta la API key o es incorrecta
         401: {"model": ErrorResponse, "description": "API key inválida o ausente."},
-
         # Error cuando el cliente no tiene permisos
         403: {"model": ErrorResponse, "description": "Permisos insuficientes."},
-
-
         422: {
             "model": ErrorResponse,
             "description": "JSON válido que incumple campos, tipos o rangos.",
         },
-        
         # Error cuando se supera el límite de peticiones
         429: {
             "model": ErrorResponse,
@@ -78,17 +69,16 @@ router = APIRouter(
                 }
             },
         },
-
-
         503: {"model": ErrorResponse, "description": "El modelo no está cargado."},
     },
 )
 
-#¿que ventajas tiene declarar la autenticacion una sola vez en el router?
-#que todas las rutas de ese ruter quedan prtegidas automaticamente, sin repetir la
-#autenticacion en cada endpoint. 
+# ¿que ventajas tiene declarar la autenticacion una sola vez en el router?
+# que todas las rutas de ese ruter quedan prtegidas automaticamente, sin repetir la
+# autenticacion en cada endpoint.
 
-#endpoint para predecir la calidad del vino
+# endpoint para predecir la calidad del vino
+
 
 @router.post(
     "",
@@ -108,10 +98,10 @@ def create_prediction(
     - `confidence` se devuelve con dos decimales.
     - Guarda `request_id` si necesitas reportar una incidencia.
     """
-#realizamos la prediccion
+    # realizamos la prediccion
 
     output = predictor.predict(payload.features)
-    #devolvemos la respuesta con la prediccion y sus metadatos
+    # devolvemos la respuesta con la prediccion y sus metadatos
 
     return PredictionResponse(
         prediction=Prediction.model_validate(output, from_attributes=True),

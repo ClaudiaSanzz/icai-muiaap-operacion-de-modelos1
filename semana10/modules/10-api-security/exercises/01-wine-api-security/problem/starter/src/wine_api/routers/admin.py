@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends  # noqa: F401 - pista para S10.3d
 
 from wine_api.dependencies import RequestIdDep, SettingsDep  # noqa: F401
 from wine_api.rate_limit import RateLimiterDep  # noqa: F401 - pista para S10.3d
-from wine_api.schemas import ClientUsage, UsageResponse, ErrorResponse # noqa: F401
+from wine_api.schemas import ClientUsage, ErrorResponse, UsageResponse  # noqa: F401
 from wine_api.security import require_scope
-from wine_api.schemas import ClientUsage, UsageResponse  # noqa: F401
 
 # TODO S10.3d: protege este router con el scope `admin` (a nivel de
 # `APIRouter`, como en predicciones) y crea `GET /v1/admin/usage`:
@@ -17,7 +16,7 @@ from wine_api.schemas import ClientUsage, UsageResponse  # noqa: F401
 # Comprobación: uv run pytest -q tests/test_s10_3_authorization.py
 # TODO S10.6a: documenta también aquí los 401 y 403 con `ErrorResponse`.
 router = APIRouter(
-    prefix="/v1/admin", 
+    prefix="/v1/admin",
     tags=["admin"],
     dependencies=[Depends(require_scope("admin"))],
     responses={
@@ -25,25 +24,24 @@ router = APIRouter(
             "model": ErrorResponse,
             "description": "Api key invalida o ausente",
         },
-        403:{
+        403: {
             "model": ErrorResponse,
             "description": "Permisos insuficientes",
         },
     },
 )
 
+
 @router.get(
     "/usage",
     summary="Consultar el uso de la API ",
     response_description="Peticiones realizadas por cada cliente",
 )
-
 def get_usage(
-    settings:SettingsDep,
+    settings: SettingsDep,
     limiter: RateLimiterDep,
-    request_id:RequestIdDep,
+    request_id: RequestIdDep,
 ) -> UsageResponse:
-
     """Consulta el número de peticiones realizadas por cada cliente.
 
     Devuelve las peticiones utilizadas durante la ventana actual y
@@ -52,7 +50,7 @@ def get_usage(
 
     clientes = []
 
-    #recorremos los clientes ordenados por nombre
+    # recorremos los clientes ordenados por nombre
     for nombre, config in sorted(settings.clients.items()):
         clientes.append(
             ClientUsage(
@@ -63,5 +61,6 @@ def get_usage(
         )
     return UsageResponse(clients=clientes, request_id=request_id)
 
-#Qué campo de ClientConfig nunca debe aparecer en la respuesta?
-#key, porque contiene la API key secreta
+
+# Qué campo de ClientConfig nunca debe aparecer en la respuesta?
+# key, porque contiene la API key secreta
