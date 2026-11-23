@@ -17,7 +17,7 @@ def obtener_estaciones():
     url = "https://opendata.aemet.es/opendata/api/valores/climatologicos/inventarioestaciones/todasestaciones"
 
     respuesta = requests.get(url,params=params)
-    respuesta.raise_for_status
+    respuesta.raise_for_status()
 
     #la primera respuesta contiene una URL con los datos 
     url_datos = respuesta.json()["datos"]
@@ -26,7 +26,7 @@ def obtener_estaciones():
     respuesta_datos = requests.get(url_datos)
     respuesta_datos.raise_for_status()
 
-    return respuesta_datos
+    return respuesta_datos.json()
 
 #buscar una estacion por su nombre
 def buscar_estacion(estaciones,nombre):
@@ -66,7 +66,7 @@ fechaIniStr = "2019-10-01T00:00:00UTC"
 fechaFinStr = "2019-10-30T23:59:59UTC"
 
 #obtener climatologias
-climatologias = obtener_climatologia(idema, fechIniStr, fechaFinStr)
+climatologias = obtener_climatologia(idema, fechaIniStr, fechaFinStr)
 
 #mostrar los resultados 
 
