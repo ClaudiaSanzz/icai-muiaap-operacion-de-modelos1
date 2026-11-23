@@ -49,8 +49,16 @@ def build_gateway(
 
     # TODO S7.5: si api_url contiene una URL, prioriza
     # HttpInferenceGateway(api_url) sobre los gateways locales de S6.
+
+    # usamos HTTP solo si tenemos una URL que no esté vacia
+    if api_url and api_url.strip():
+        return HttpInferenceGateway(api_url)
+
+    # si no hay una URL ni modelo local, usamos el modo demo.
     if not bundle_value:
         return DemoGateway()
+
+    # si hay un modelo local, intentamos cargarla
     try:
         return PackagedBundleGateway.from_bundle_path(Path(bundle_value))
     except Exception as error:  # noqa: BLE001 - se convierte en estado visible
